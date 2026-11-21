@@ -64,28 +64,53 @@ func runRefereeDiff(args []string) int {
 	return 0
 }
 
-func refereeDiff(base, head string) ([]referee.Finding, error) {
-	out, err := exec.Command("git", "diff", "--name-status", "-M", base, head).Output()
+// resolve turns a caller-supplied revision into a commit ID, so that no later
+// git command can read it as an option.
+func resolve(rev string) (string, error) {
+	out, err := exec.Command("git", "rev-parse", "--verify", "--quiet", "--end-of-options", rev+"^{commit}").Output()
+	if err != nil {
+		return "", fmt.Errorf("not a commit: %q", rev)
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func refereeDiff(baseRev, headRev string) ([]referee.Finding, error) {
+	base, err := resolve(baseRev)
+	if err != nil {
+		return nil, err
+	}
+	head, err := resolve(headRev)
+	if err != nil {
+		return nil, err
+	}
+	// -z: paths arrive as raw bytes. Without it git quotes unusual names and
+	// the _test.go suffix check does not match.
+	out, err := exec.Command("git", "diff", "--name-status", "-M", "-z", base, head).Output()
 	if err != nil {
 		return nil, fmt.Errorf("git diff %s %s: %w", base, head, err)
 	}
 	findings := []referee.Finding{}
-	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-		f := strings.Split(line, "\t")
-		if len(f) < 2 {
-			continue
+	f := strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00")
+	for i := 0; i < len(f) && f[i] != ""; {
+		status, paths := f[i], 1
+		if status[0] == 'R' || status[0] == 'C' {
+			paths = 2 // old path, new path
 		}
-		oldPath, newPath := f[1], f[len(f)-1] // a rename line has two paths
+		if i+paths >= len(f) {
+			return nil, fmt.Errorf("git diff: unexpected output")
+		}
+		oldPath, newPath := f[i+1], f[i+paths]
+		i += paths + 1
 		if !strings.HasSuffix(oldPath, "_test.go") && !strings.HasSuffix(newPath, "_test.go") {
 			continue
 		}
 		var b, h []byte
-		if !strings.HasPrefix(f[0], "A") {
+		if status[0] != 'A' {
 			if b, err = show(base, oldPath); err != nil {
 				return nil, err
 			}
 		}
-		if !strings.HasPrefix(f[0], "D") {
+		if status[0] != 'D' {
 			if h, err = show(head, newPath); err != nil {
 				return nil, err
 			}
