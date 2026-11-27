@@ -100,6 +100,10 @@ func changes(baseRev, headRev string) (base, head string, cs []referee.Change, e
 	f := strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00")
 	for i := 0; i < len(f) && f[i] != ""; {
 		status, paths := f[i], 1
+		// Fail closed: a status that this code does not know is not a clean file.
+		if !strings.ContainsRune("ACDMRT", rune(status[0])) {
+			return "", "", nil, fmt.Errorf("git diff: unknown file status %q", status)
+		}
 		if status[0] == 'R' || status[0] == 'C' {
 			paths = 2 // old path, new path
 		}

@@ -195,3 +195,37 @@ func TestRefereeScopeCommand(t *testing.T) {
 		}
 	}
 }
+
+// fakeGit puts a git script first on PATH. It resolves each revision and
+// prints the given name-status output for a diff.
+func fakeGit(t *testing.T, diffOutput string) {
+	t.Helper()
+	dir := t.TempDir()
+	script := "#!/bin/sh\ncase \"$1\" in\nrev-parse) echo 1111111111111111111111111111111111111111 ;;\ndiff) printf '" + diffOutput + "' ;;\nesac\n"
+	if err := os.WriteFile(filepath.Join(dir, "git"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// The finding of the Qodo review on pull request 8: a file status that the
+// check does not know must not read as clean, also when its path is in scope.
+func TestRefereeScopeUnknownGitStatus(t *testing.T) {
+	ready := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: ` + "`cmd/yantra/`" + `"}`
+	args := []string{"--ticket", "5", "--base", "a", "--head", "b"}
+	for name, c := range map[string]struct {
+		diff string
+		want int
+	}{
+		"known status in scope":   {`M\000cmd/yantra/a.go\000`, 0},
+		"unknown status in scope": {`X\000cmd/yantra/a.go\000`, 2},
+		"unmerged status":         {`U\000cmd/yantra/a.go\000`, 2},
+		"cut-off rename":          {`R100\000cmd/yantra/a.go\000`, 2},
+	} {
+		fakeGh(t, ready)
+		fakeGit(t, c.diff)
+		if got := runRefereeScope(args); got != c.want {
+			t.Errorf("%s: exit %d, want %d", name, got, c.want)
+		}
+	}
+}
