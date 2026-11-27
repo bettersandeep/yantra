@@ -52,3 +52,75 @@ func TestRefereeDiffCommand(t *testing.T) {
 		t.Error("option-like revision: git wrote a file")
 	}
 }
+
+// fakeGh puts a gh script first on PATH. The script records that it ran and
+// prints the given JSON, or fails when the JSON is empty.
+func fakeGh(t *testing.T, json string) (ran func() bool) {
+	t.Helper()
+	dir := t.TempDir()
+	marker := filepath.Join(dir, "ran")
+	script := "#!/bin/sh\ntouch '" + marker + "'\n"
+	if json == "" {
+		script += "exit 1\n"
+	} else {
+		script += "cat <<'JSON'\n" + json + "\nJSON\n"
+	}
+	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return func() bool { _, err := os.Stat(marker); return err == nil }
+}
+
+func TestTicketShowExitCodes(t *testing.T) {
+	ready := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: ` + "`a/`" + `"}`
+	notReady := `{"number":5,"title":"t","state":"OPEN","body":"Please make it better."}`
+	cases := []struct {
+		name string
+		json string
+		arg  string
+		want int
+	}{
+		{"ready ticket", ready, "5", 0},
+		{"ticket without criteria", notReady, "5", 1},
+		{"gh fails", "", "5", 2},
+		{"gh returns a different issue", ready, "6", 2},
+		{"gh returns no JSON", "not json", "5", 2},
+	}
+	for _, c := range cases {
+		fakeGh(t, c.json)
+		if got := runTicketShow([]string{c.arg}); got != c.want {
+			t.Errorf("%s: exit %d, want %d", c.name, got, c.want)
+		}
+	}
+}
+
+func TestTicketShowBadNumberDoesNotReachGh(t *testing.T) {
+	for _, arg := range []string{"abc", "0", "-3", "5; rm -rf x", "--repo=other/repo", "5.0", ""} {
+		ran := fakeGh(t, `{"number":5}`)
+		if got := runTicketShow([]string{arg}); got != 2 {
+			t.Errorf("%q: exit %d, want 2", arg, got)
+		}
+		if ran() {
+			t.Errorf("%q: gh was called", arg)
+		}
+	}
+	if got := runTicketShow(nil); got != 2 {
+		t.Errorf("no argument: exit %d, want 2", got)
+	}
+}
+
+func TestTicketList(t *testing.T) {
+	fakeGh(t, `[{"number":5,"title":"a","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: x/"},{"number":6,"title":"b","state":"OPEN","body":"no criteria"}]`)
+	if got := runTicketList(); got != 1 {
+		t.Errorf("one ticket not ready: exit %d, want 1", got)
+	}
+	fakeGh(t, `[]`)
+	if got := runTicketList(); got != 0 {
+		t.Errorf("no tickets: exit %d, want 0", got)
+	}
+	fakeGh(t, "")
+	if got := runTicketList(); got != 2 {
+		t.Errorf("gh fails: exit %d, want 2", got)
+	}
+}

@@ -34,3 +34,8 @@ go test -race ./...
 ## License
 
 MIT
+
+`yantra ticket show <number>` reads one GitHub issue through the `gh` tool and prints it as JSON, with its acceptance criteria and scope paths.
+`yantra ticket list` does the same for the open issues with the `ticket` label.
+A ticket with no acceptance criteria or no scope paths is not ready.
+Exit code 0 means ready, 1 means not ready, 2 means that the ticket could not be read.

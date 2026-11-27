@@ -6,9 +6,11 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 
 	"github.com/bettersandeep/yantra/internal/referee"
+	"github.com/bettersandeep/yantra/internal/ticket"
 )
 
 const usage = `yantra - a factory that makes software factories
@@ -18,6 +20,8 @@ usage: yantra <command>
 commands:
   version                                   print the version
   referee diff --base <rev> [--head <rev>]  report test weakening between two commits
+  ticket show <number>                      print one ticket and say if it is ready
+  ticket list                               print the open tickets
 `
 
 func main() {
@@ -27,6 +31,10 @@ func main() {
 		fmt.Println("yantra 0.0.0")
 	case len(args) >= 2 && args[0] == "referee" && args[1] == "diff":
 		os.Exit(runRefereeDiff(args[2:]))
+	case len(args) >= 2 && args[0] == "ticket" && args[1] == "show":
+		os.Exit(runTicketShow(args[2:]))
+	case len(args) == 2 && args[0] == "ticket" && args[1] == "list":
+		os.Exit(runTicketList())
 	default:
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)
@@ -51,10 +59,7 @@ func runRefereeDiff(args []string) int {
 		fmt.Fprintln(os.Stderr, "referee:", err)
 		return 2
 	}
-	enc := json.NewEncoder(os.Stdout)
-	enc.SetIndent("", "  ")
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(findings); err != nil {
+	if err := printJSON(findings); err != nil {
 		fmt.Fprintln(os.Stderr, "referee:", err)
 		return 2
 	}
@@ -130,4 +135,84 @@ func show(rev, path string) ([]byte, error) {
 		return nil, fmt.Errorf("git show %s:%s: %w", rev, path, err)
 	}
 	return out, nil
+}
+
+func printJSON(v any) error {
+	enc := json.NewEncoder(os.Stdout)
+	enc.SetIndent("", "  ")
+	enc.SetEscapeHTML(false)
+	return enc.Encode(v)
+}
+
+// issue is the part of the gh JSON output that a ticket needs.
+type issue struct {
+	Number int    `json:"number"`
+	Title  string `json:"title"`
+	State  string `json:"state"`
+	Body   string `json:"body"`
+}
+
+const issueFields = "number,title,state,body"
+
+// runTicketShow exits 0 when the ticket is ready, 1 when it is not ready, 2
+// when the ticket could not be read.
+func runTicketShow(args []string) int {
+	if len(args) != 1 {
+		fmt.Fprintln(os.Stderr, "usage: yantra ticket show <number>")
+		return 2
+	}
+	// Only the parsed integer reaches gh, never the caller's text.
+	n, err := strconv.Atoi(args[0])
+	if err != nil || n <= 0 {
+		fmt.Fprintf(os.Stderr, "ticket: not a positive issue number: %q\n", args[0])
+		return 2
+	}
+	out, err := exec.Command("gh", "issue", "view", strconv.Itoa(n), "--json", issueFields).Output()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ticket: gh issue view %d: %v\n", n, err)
+		return 2
+	}
+	var is issue
+	if err := json.Unmarshal(out, &is); err != nil || is.Number != n {
+		fmt.Fprintf(os.Stderr, "ticket: unexpected gh output for issue %d\n", n)
+		return 2
+	}
+	t := ticket.New(is.Number, is.Title, is.State, is.Body)
+	if err := printJSON(t); err != nil {
+		fmt.Fprintln(os.Stderr, "ticket:", err)
+		return 2
+	}
+	if !t.Ready {
+		return 1
+	}
+	return 0
+}
+
+// runTicketList prints the open issues with the ticket label. It exits 1
+// when one or more of them is not ready.
+func runTicketList() int {
+	out, err := exec.Command("gh", "issue", "list", "--label", "ticket", "--state", "open", "--limit", "100", "--json", issueFields).Output()
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "ticket: gh issue list:", err)
+		return 2
+	}
+	var issues []issue
+	if err := json.Unmarshal(out, &issues); err != nil {
+		fmt.Fprintln(os.Stderr, "ticket: unexpected gh output:", err)
+		return 2
+	}
+	tickets := []ticket.Ticket{}
+	code := 0
+	for _, is := range issues {
+		t := ticket.New(is.Number, is.Title, is.State, is.Body)
+		if !t.Ready {
+			code = 1
+		}
+		tickets = append(tickets, t)
+	}
+	if err := printJSON(tickets); err != nil {
+		fmt.Fprintln(os.Stderr, "ticket:", err)
+		return 2
+	}
+	return code
 }
