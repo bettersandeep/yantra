@@ -18,7 +18,9 @@ type Ticket struct {
 }
 
 var (
-	criteriaHead = regexp.MustCompile(`(?i)^\s*(#{1,6}\s*)?\**acceptance criteria\**:?\**\s*$`)
+	criteriaHead = regexp.MustCompile(`(?i)^\s*(#{1,6}\s*)?\**acceptance criteria\**:?\**\s*#*\s*$`)
+	underline    = regexp.MustCompile(`^\s*(=+|-+)\s*$`) // the second line of a Setext heading
+	fence        = regexp.MustCompile("^\\s*(```|~~~)")
 	listItem     = regexp.MustCompile(`^\s*(?:[-*+]|\d+[.)])\s+(?:\[[ xX]\]\s+)?(.*\S)\s*$`)
 	scopeLine    = regexp.MustCompile(`(?i)^\s*\**scope\**:\**\s*(.*)$`)
 	backticked   = regexp.MustCompile("`([^`]+)`")
@@ -28,13 +30,24 @@ var (
 // body has at least one acceptance criterion and at least one scope path.
 func New(number int, title, state, body string) Ticket {
 	t := Ticket{Number: number, Title: title, State: state, Criteria: []string{}, Scope: []string{}}
-	inCriteria := false
+	inCriteria, inFence := false, false
 	for _, line := range strings.Split(strings.ReplaceAll(body, "\r\n", "\n"), "\n") {
+		// A code sample is not ticket data. Skip the lines of a fenced block.
+		if fence.MatchString(line) {
+			inFence = !inFence
+			continue
+		}
+		if inFence {
+			continue
+		}
 		if criteriaHead.MatchString(line) {
 			inCriteria = true
 			continue
 		}
 		if inCriteria {
+			if len(t.Criteria) == 0 && underline.MatchString(line) {
+				continue
+			}
 			if m := listItem.FindStringSubmatch(line); m != nil {
 				t.Criteria = append(t.Criteria, m[1])
 				continue
@@ -64,7 +77,9 @@ func scopePaths(s string) []string {
 	var paths []string
 	if ms := backticked.FindAllStringSubmatch(s, -1); ms != nil {
 		for _, m := range ms {
-			paths = append(paths, strings.TrimSpace(m[1]))
+			if p := strings.TrimSpace(m[1]); p != "" {
+				paths = append(paths, p)
+			}
 		}
 		return paths
 	}

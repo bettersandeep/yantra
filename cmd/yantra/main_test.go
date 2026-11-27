@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -122,5 +123,27 @@ func TestTicketList(t *testing.T) {
 	fakeGh(t, "")
 	if got := runTicketList(); got != 2 {
 		t.Errorf("gh fails: exit %d, want 2", got)
+	}
+}
+
+// One case per shape that the Qodo review on pull request 7 named.
+func TestTicketListFailsClosed(t *testing.T) {
+	one := `{"number":5,"title":"a","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: x/"}`
+	for name, json := range map[string]string{
+		"null":                   `null`,
+		"null entry":             `[null]`,
+		"an object, not a list":  one,
+		"issue without a number": `[{"title":"a","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: x/"}]`,
+		"issue without a title":  `[{"number":5,"state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: x/"}]`,
+		"list at the limit":      "[" + strings.Repeat(one+",", ticketListLimit-1) + one + "]",
+	} {
+		fakeGh(t, json)
+		if got := runTicketList(); got != 2 {
+			t.Errorf("%s: exit %d, want 2", name, got)
+		}
+	}
+	fakeGh(t, `{"number":5,"body":"Acceptance criteria:\n- one\n\nScope: x/"}`)
+	if got := runTicketShow([]string{"5"}); got != 2 {
+		t.Errorf("show, issue without title and state: exit %d, want 2", got)
 	}
 }

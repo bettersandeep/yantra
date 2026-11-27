@@ -154,6 +154,15 @@ type issue struct {
 
 const issueFields = "number,title,state,body"
 
+// ticketListLimit is the most issues that one list call reads. A list that
+// reaches it is treated as incomplete.
+const ticketListLimit = 1000
+
+// valid reports whether gh returned the fields that a ticket needs.
+func (is *issue) valid() bool {
+	return is != nil && is.Number > 0 && is.Title != "" && is.State != ""
+}
+
 // runTicketShow exits 0 when the ticket is ready, 1 when it is not ready, 2
 // when the ticket could not be read.
 func runTicketShow(args []string) int {
@@ -173,7 +182,7 @@ func runTicketShow(args []string) int {
 		return 2
 	}
 	var is issue
-	if err := json.Unmarshal(out, &is); err != nil || is.Number != n {
+	if err := json.Unmarshal(out, &is); err != nil || !is.valid() || is.Number != n {
 		fmt.Fprintf(os.Stderr, "ticket: unexpected gh output for issue %d\n", n)
 		return 2
 	}
@@ -191,19 +200,27 @@ func runTicketShow(args []string) int {
 // runTicketList prints the open issues with the ticket label. It exits 1
 // when one or more of them is not ready.
 func runTicketList() int {
-	out, err := exec.Command("gh", "issue", "list", "--label", "ticket", "--state", "open", "--limit", "100", "--json", issueFields).Output()
+	out, err := exec.Command("gh", "issue", "list", "--label", "ticket", "--state", "open", "--limit", strconv.Itoa(ticketListLimit), "--json", issueFields).Output()
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "ticket: gh issue list:", err)
 		return 2
 	}
-	var issues []issue
-	if err := json.Unmarshal(out, &issues); err != nil {
-		fmt.Fprintln(os.Stderr, "ticket: unexpected gh output:", err)
+	var issues []*issue
+	if err := json.Unmarshal(out, &issues); err != nil || issues == nil {
+		fmt.Fprintln(os.Stderr, "ticket: unexpected gh output")
+		return 2
+	}
+	if len(issues) >= ticketListLimit {
+		fmt.Fprintf(os.Stderr, "ticket: %d or more open tickets, the list can be incomplete\n", ticketListLimit)
 		return 2
 	}
 	tickets := []ticket.Ticket{}
 	code := 0
 	for _, is := range issues {
+		if !is.valid() {
+			fmt.Fprintln(os.Stderr, "ticket: gh returned an issue without a number, title or state")
+			return 2
+		}
 		t := ticket.New(is.Number, is.Title, is.State, is.Body)
 		if !t.Ready {
 			code = 1
