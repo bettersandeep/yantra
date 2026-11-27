@@ -39,3 +39,7 @@ MIT
 `yantra ticket list` does the same for the open issues with the `ticket` label.
 A ticket with no acceptance criteria or no scope paths is not ready.
 Exit code 0 means ready, 1 means not ready, 2 means that the ticket could not be read.
+
+`yantra referee scope --ticket <number> --base <rev> [--head <rev>]` compares two commits and reports each changed file that is outside the scope paths of the ticket.
+A scope path that ends with `/` covers all files below it, and other scope paths match one file exactly.
+Exit code 0 means that all changed files are in scope, 1 means findings, 2 means that the check could not run.

@@ -147,3 +147,51 @@ func TestTicketListFailsClosed(t *testing.T) {
 		t.Errorf("show, issue without title and state: exit %d, want 2", got)
 	}
 }
+
+func TestRefereeScopeCommand(t *testing.T) {
+	dir := t.TempDir()
+	wd, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(wd)
+	write := func(path string) {
+		os.MkdirAll(filepath.Dir(path), 0o755)
+		os.WriteFile(path, []byte(path+"\n"), 0o644)
+	}
+	git(t, "init", "-q", "-b", "main")
+	write("README.md")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "base")
+	write("cmd/yantra/new.go")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "in scope")
+	write("go.mod")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "out of scope")
+
+	ready := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: ` + "`cmd/yantra/`, `README.md`" + `"}`
+	notReady := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one"}`
+	cases := []struct {
+		name string
+		json string
+		args []string
+		want int
+	}{
+		{"all changes in scope", ready, []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 0},
+		{"one change out of scope", ready, []string{"--ticket", "5", "--base", "HEAD~2"}, 1},
+		{"ticket without scope", notReady, []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 2},
+		{"gh fails", "", []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 2},
+		{"no ticket number", ready, []string{"--base", "HEAD~2"}, 2},
+		{"ticket number is not a number", ready, []string{"--ticket", "five", "--base", "HEAD~2"}, 2},
+		{"no base", ready, []string{"--ticket", "5"}, 2},
+		{"bad revision", ready, []string{"--ticket", "5", "--base", "nosuchrev"}, 2},
+		{"extra argument", ready, []string{"--ticket", "5", "--base", "HEAD~2", "extra"}, 2},
+	}
+	for _, c := range cases {
+		fakeGh(t, c.json)
+		if got := runRefereeScope(c.args); got != c.want {
+			t.Errorf("%s: exit %d, want %d", c.name, got, c.want)
+		}
+	}
+}
