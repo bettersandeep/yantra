@@ -10,3 +10,5 @@ It has no code.
 - `day01/repro-high-findings.sh`: the script that reproduced the three High findings on commit `a364ba0`.
 - `day01/demo-output.txt`: the output of `yantra referee diff` on a temp repo with one weakened test, run on commit `fd63959`.
 - `day02/qodo-standards-after-import.json`: the output of `qodo rules list` on 2026-11-27 after the import from `AGENTS.md`, with internal IDs removed.
+- `day03/ticket5-acceptance-run.txt`, `day03/ticket6-acceptance-run.txt`: the output of the new commands against the real issues and commits of this repo.
+- `day03/qodo-first-review-pr7.md`, `day03/qodo-first-review-pr8.md`: the body of the first Qodo review comment on each pull request, as the GitHub API returned it before the re-review replaced it.

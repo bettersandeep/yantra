@@ -1,0 +1,34 @@
+# The work for ticket 6, checked against ticket 6
+$ yantra referee scope --ticket 6 --base main --head ticket-6
+[]
+exit code: 0
+
+# The work for ticket 5 (pull request 7), checked against ticket 5
+$ yantra referee scope --ticket 5 --base 3edfd9d --head 3b51e51
+[]
+exit code: 0
+
+# The Day 1 work (pull request 2), checked against ticket 5: other paths
+$ yantra referee scope --ticket 5 --base 4140704 --head fd63959
+[
+  {
+    "file": "internal/referee/referee.go",
+    "kind": "out_of_scope",
+    "detail": "new file outside the ticket's scope"
+  },
+  {
+    "file": "internal/referee/referee_test.go",
+    "kind": "out_of_scope",
+    "detail": "new file outside the ticket's scope"
+  }
+]
+exit code: 1
+
+# Issue 4 is a pull request with no acceptance criteria and no scope
+$ yantra referee scope --ticket 4 --base main
+referee: ticket 4 is not ready: no acceptance criteria, no scope paths
+exit code: 2
+
+$ yantra referee scope --ticket 6 --base=--output=/tmp/x
+referee: not a commit: "--output=/tmp/x"
+exit code: 2

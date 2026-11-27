@@ -1,0 +1,49 @@
+$ yantra ticket show 5
+{
+  "number": 5,
+  "title": "ticket show and ticket list: read tickets and refuse the ones that are not ready",
+  "state": "OPEN",
+  "criteria": [
+    "`yantra ticket show <number>` prints one issue as JSON: number, title, state, the acceptance criteria as a list, and the scope paths as a list.",
+    "`yantra ticket list` prints the open issues with the `ticket` label in the same JSON form.",
+    "A ticket is ready when it has at least one acceptance criterion and at least one scope path. The JSON has `ready` and the reasons when it is not ready.",
+    "Exit code 0 when ready, 1 when not ready, 2 when the ticket could not be read.",
+    "An issue number that is not a positive integer exits 2 and does not reach `gh`."
+  ],
+  "scope": [
+    "internal/ticket/",
+    "cmd/yantra/",
+    "README.md"
+  ],
+  "ready": true
+}
+exit code: 0
+
+$ yantra ticket list | jq -c ".[] | {number, ready, criteria: (.criteria|length), scope}"
+{"number":6,"ready":true,"criteria":4,"scope":["internal/referee/","internal/ticket/","cmd/yantra/","README.md"]}
+{"number":5,"ready":true,"criteria":5,"scope":["internal/ticket/","cmd/yantra/","README.md"]}
+exit code: 0
+
+$ yantra ticket show 4    # a pull request body with no acceptance criteria
+{"number":4,"ready":false,"reasons":["no acceptance criteria","no scope paths"]}
+exit code: 1
+
+$ yantra ticket show abc
+ticket: not a positive issue number: "abc"
+exit code: 2
+
+$ yantra ticket show 0
+ticket: not a positive issue number: "0"
+exit code: 2
+
+$ yantra ticket show -3
+ticket: not a positive issue number: "-3"
+exit code: 2
+
+$ yantra ticket show --repo=other/repo
+ticket: not a positive issue number: "--repo=other/repo"
+exit code: 2
+
+$ yantra ticket show 99999
+ticket: gh issue view 99999: exit status 1
+exit code: 2
