@@ -1,0 +1,16 @@
+$ yantra referee diff --base HEAD~1 --head HEAD
+[
+  {
+    "file": "add_test.go",
+    "func": "TestAdd",
+    "kind": "assert_removed",
+    "detail": "assertions 2 -> 1"
+  },
+  {
+    "file": "add_test.go",
+    "func": "TestAdd",
+    "kind": "skip_added",
+    "detail": "unconditional skips 0 -> 1"
+  }
+]
+exit code: 1
