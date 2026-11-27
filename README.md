@@ -20,6 +20,10 @@ go build ./cmd/yantra
 ./yantra version
 ```
 
+`yantra referee diff --base main --head HEAD` compares the Go test files of two commits.
+It reports removed assertions, deleted tests, new skips and new lint suppressions.
+It exits 0 when clean, 1 on findings, and 2 when it could not run.
+
 ## Verify
 
 ```
