@@ -42,8 +42,9 @@ docker run --rm --network none -v "$PWD":/src:ro -w /src -e GOCACHE=/tmp/gocache
   - A list that is as long as the limit that was asked for is incomplete. Treat it as an error.
   - A value from a fixed set, such as a git file status, is an error when it is not in the set. Do not send it to a default branch.
   - An empty string is not a value. Check it after the trim.
+  - Text inside a fenced code block is a sample, not data.
 - Reason: pull request #2. The first version of `referee diff` passed its tests and passed CI, and Qodo found three paths where it reported "clean" without a look at the file.
-- Second reason: pull requests #7 and #8. This rule was in this file, and the agent broke it again four times in two tickets. Qodo found each one. The list above is those four cases. One was a test file with a non-ASCII name. A gate that fails open is worse than no gate, because people trust it.
+- Second reason: pull requests #7 and #8. This rule was in this file, and the agent broke it again five times in two tickets. Qodo found each one. The list above is those five cases. One was a test file with a non-ASCII name. A gate that fails open is worse than no gate, because people trust it.
 
 ### 2. Resolve caller input before it reaches another program
 
