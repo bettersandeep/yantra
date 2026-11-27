@@ -1,0 +1,110 @@
+{
+  "totalCount": 7,
+  "rules": [
+    {
+      "name": "Resolve caller revisions safely before using them in git operations",
+      "state": "active",
+      "severity": "error",
+      "category": "Security",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "Trace caller-supplied revision strings to git invocations. Resolve them to commit IDs using git rev-parse --verify --end-of-options, reject resolution failures, and pass only resolved IDs to subsequent git commands. The resolver itself necessarily receives the revision after --end-of-options.",
+      "goodExamples": "base, err := resolve(baseRev)\nif err != nil { return nil, err }\nhead, err := resolve(headRev)\nif err != nil { return nil, err }\nout, err := exec.Command(\"git\", \"diff\", base, head).Output()\n// resolve uses git rev-parse --verify --end-of-options rev^{commit}.",
+      "badExamples": "out, err := exec.Command(\"git\", \"diff\", baseRev, headRev).Output()",
+      "createdAt": "2026-11-27T22:16:00.775047Z"
+    },
+    {
+      "name": "Read git path listings with NUL delimiters",
+      "state": "active",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "For git commands listing file paths, verify use of -z and parsing of NUL-separated raw paths rather than newline splitting or quoted-path suffix checks.",
+      "goodExamples": "out, err := exec.Command(\"git\", \"diff\", \"--name-only\", \"-z\", base, head).Output()\npaths := strings.Split(strings.TrimSuffix(string(out), \"\\x00\"), \"\\x00\")\n_ = paths; _ = err",
+      "badExamples": "out, err := exec.Command(\"git\", \"diff\", \"--name-only\", base, head).Output()\npaths := strings.Split(string(out), \"\\n\")\n_ = paths; _ = err",
+      "createdAt": "2026-11-27T22:16:02.699104Z"
+    },
+    {
+      "name": "Do not weaken tests to obtain a green build",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "Review test changes for removed assertions, deleted tests, added skips, or added nolint suppressions used to bypass failures. If a test is claimed to be wrong, require the pull request to explain the correction. Do not treat deliberately weak source strings used as referee fixtures as weakened executable tests.",
+      "goodExamples": "func TestResult(t *testing.T) {\n    if got := result(); got != 42 { t.Fatalf(\"got %d\", got) }\n}\n// Fix result() rather than disabling this check.",
+      "badExamples": "func TestResult(t *testing.T) {\n    t.Skip(\"fails after my change\")\n    if got := result(); got != 42 { t.Fatalf(\"got %d\", got) }\n}",
+      "createdAt": "2026-11-27T22:16:07.677886Z"
+    },
+    {
+      "name": "Do not add third-party dependencies without the documented human exception",
+      "state": "active",
+      "severity": "warning",
+      "category": "Maintainability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "Inspect go.mod changes for new dependencies. The default is standard-library-only; an exception requires that the standard library cannot do the job and that an issue with human approval exists.",
+      "goodExamples": "module github.com/bettersandeep/yantra\n\ngo 1.23",
+      "badExamples": "module github.com/bettersandeep/yantra\n\ngo 1.23\n\nrequire github.com/stretchr/testify v1.9.0 // added without approval",
+      "createdAt": "2026-11-27T22:16:15.751610Z"
+    },
+    {
+      "name": "Commands must exit with code 2 when a check cannot run",
+      "state": "active",
+      "severity": "warning",
+      "category": "Reliability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "Trace check errors through command entry points and verify that inability to run the check produces exit status 2, not clean status 0 or findings status 1.",
+      "goodExamples": "findings, err := refereeDiff(base, head)\nif err != nil { return 2 }\n_ = findings",
+      "badExamples": "findings, err := refereeDiff(base, head)\nif err != nil { return 0 }\n_ = findings",
+      "createdAt": "2026-11-27T22:15:56.004359Z"
+    },
+    {
+      "name": "Checks must fail closed on unreadable, unparseable, or unsupported input",
+      "state": "active",
+      "severity": "error",
+      "category": "Reliability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "Inspect check input handling, parsing, and unsupported-input branches in internal/referee, cmd/yantra, and future checks. Each inability to inspect an input must return an error rather than skip it or report clean.",
+      "goodExamples": "f, err := parser.ParseFile(fset, name, src, 0)\nif err != nil { return nil, err }\n_ = f",
+      "badExamples": "f, err := parser.ParseFile(fset, name, src, 0)\nif err != nil { return nil, nil }\n_ = f",
+      "createdAt": "2026-11-27T22:15:55.652936Z"
+    },
+    {
+      "name": "Bug fixes must include a regression test that fails before the fix",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/"
+      ],
+      "content": "For each bug or review-finding fix, inspect the added test case and confirm that it fails against the pre-fix implementation and passes against the corrected implementation.",
+      "goodExamples": "if _, err := refereeDiff(\"--output=\"+out, \"HEAD\"); err == nil {\n    t.Error(\"option-like revision: want error, got nil\")\n}\nif _, err := os.Stat(out); err == nil {\n    t.Error(\"option-like revision: git wrote a file\")\n}",
+      "badExamples": "// Fix option injection, but add no test exercising an option-like revision.\nbase, err := resolve(baseRev)",
+      "createdAt": "2026-11-27T22:16:10.436615Z"
+    }
+  ]
+}

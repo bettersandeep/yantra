@@ -9,3 +9,4 @@ It has no code.
 - `day01/qodo-first-review-pr2.md`: the body of Qodo's first review comment on pull request 2, as the GitHub API returned it on 2026-11-21 before the re-review replaced it. The same text is in the edit history of that comment.
 - `day01/repro-high-findings.sh`: the script that reproduced the three High findings on commit `a364ba0`.
 - `day01/demo-output.txt`: the output of `yantra referee diff` on a temp repo with one weakened test, run on commit `fd63959`.
+- `day02/qodo-standards-after-import.json`: the output of `qodo rules list` on 2026-11-27 after the import from `AGENTS.md`, with internal IDs removed.
