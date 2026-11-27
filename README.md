@@ -12,3 +12,4 @@ It has no code.
 - `day02/qodo-standards-after-import.json`: the output of `qodo rules list` on 2026-11-27 after the import from `AGENTS.md`, with internal IDs removed.
 - `day03/ticket5-acceptance-run.txt`, `day03/ticket6-acceptance-run.txt`: the output of the new commands against the real issues and commits of this repo.
 - `day03/qodo-first-review-pr7.md`, `day03/qodo-first-review-pr8.md`: the body of the first Qodo review comment on each pull request, as the GitHub API returned it before the re-review replaced it.
+- `day01-database/`: evidence for the Day 1 post after it moved to the database repo `yantra-sql`. The two Qodo files are comment bodies from the GitHub API. `edge-probe.rs` is a throwaway test that was run against the merged engine, and `edge-probe-output.txt` is its output.
