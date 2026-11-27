@@ -15,7 +15,7 @@ import (
 type Finding struct {
 	File   string `json:"file"`
 	Func   string `json:"func,omitempty"`
-	Kind   string `json:"kind"` // assert_removed | test_deleted | skip_added | nolint_added
+	Kind   string `json:"kind"` // assert_removed | test_deleted | skip_added | nolint_added | out_of_scope
 	Detail string `json:"detail"`
 }
 

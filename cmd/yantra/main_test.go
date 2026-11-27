@@ -147,3 +147,85 @@ func TestTicketListFailsClosed(t *testing.T) {
 		t.Errorf("show, issue without title and state: exit %d, want 2", got)
 	}
 }
+
+func TestRefereeScopeCommand(t *testing.T) {
+	dir := t.TempDir()
+	wd, _ := os.Getwd()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chdir(wd)
+	write := func(path string) {
+		os.MkdirAll(filepath.Dir(path), 0o755)
+		os.WriteFile(path, []byte(path+"\n"), 0o644)
+	}
+	git(t, "init", "-q", "-b", "main")
+	write("README.md")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "base")
+	write("cmd/yantra/new.go")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "in scope")
+	write("go.mod")
+	git(t, "add", ".")
+	git(t, "commit", "-q", "-m", "out of scope")
+
+	ready := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: ` + "`cmd/yantra/`, `README.md`" + `"}`
+	notReady := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one"}`
+	cases := []struct {
+		name string
+		json string
+		args []string
+		want int
+	}{
+		{"all changes in scope", ready, []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 0},
+		{"one change out of scope", ready, []string{"--ticket", "5", "--base", "HEAD~2"}, 1},
+		{"ticket without scope", notReady, []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 2},
+		{"gh fails", "", []string{"--ticket", "5", "--base", "HEAD~2", "--head", "HEAD~1"}, 2},
+		{"no ticket number", ready, []string{"--base", "HEAD~2"}, 2},
+		{"ticket number is not a number", ready, []string{"--ticket", "five", "--base", "HEAD~2"}, 2},
+		{"no base", ready, []string{"--ticket", "5"}, 2},
+		{"bad revision", ready, []string{"--ticket", "5", "--base", "nosuchrev"}, 2},
+		{"extra argument", ready, []string{"--ticket", "5", "--base", "HEAD~2", "extra"}, 2},
+	}
+	for _, c := range cases {
+		fakeGh(t, c.json)
+		if got := runRefereeScope(c.args); got != c.want {
+			t.Errorf("%s: exit %d, want %d", c.name, got, c.want)
+		}
+	}
+}
+
+// fakeGit puts a git script first on PATH. It resolves each revision and
+// prints the given name-status output for a diff.
+func fakeGit(t *testing.T, diffOutput string) {
+	t.Helper()
+	dir := t.TempDir()
+	script := "#!/bin/sh\ncase \"$1\" in\nrev-parse) echo 1111111111111111111111111111111111111111 ;;\ndiff) printf '" + diffOutput + "' ;;\nesac\n"
+	if err := os.WriteFile(filepath.Join(dir, "git"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// The finding of the Qodo review on pull request 8: a file status that the
+// check does not know must not read as clean, also when its path is in scope.
+func TestRefereeScopeUnknownGitStatus(t *testing.T) {
+	ready := `{"number":5,"title":"t","state":"OPEN","body":"Acceptance criteria:\n- one\n\nScope: ` + "`cmd/yantra/`" + `"}`
+	args := []string{"--ticket", "5", "--base", "a", "--head", "b"}
+	for name, c := range map[string]struct {
+		diff string
+		want int
+	}{
+		"known status in scope":   {`M\000cmd/yantra/a.go\000`, 0},
+		"unknown status in scope": {`X\000cmd/yantra/a.go\000`, 2},
+		"unmerged status":         {`U\000cmd/yantra/a.go\000`, 2},
+		"cut-off rename":          {`R100\000cmd/yantra/a.go\000`, 2},
+	} {
+		fakeGh(t, ready)
+		fakeGit(t, c.diff)
+		if got := runRefereeScope(args); got != c.want {
+			t.Errorf("%s: exit %d, want %d", name, got, c.want)
+		}
+	}
+}

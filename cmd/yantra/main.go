@@ -20,6 +20,8 @@ usage: yantra <command>
 commands:
   version                                   print the version
   referee diff --base <rev> [--head <rev>]  report test weakening between two commits
+  referee scope --ticket <n> --base <rev> [--head <rev>]
+                                            report changed files outside the ticket's scope
   ticket show <number>                      print one ticket and say if it is ready
   ticket list                               print the open tickets
 `
@@ -31,6 +33,8 @@ func main() {
 		fmt.Println("yantra 0.0.0")
 	case len(args) >= 2 && args[0] == "referee" && args[1] == "diff":
 		os.Exit(runRefereeDiff(args[2:]))
+	case len(args) >= 2 && args[0] == "referee" && args[1] == "scope":
+		os.Exit(runRefereeScope(args[2:]))
 	case len(args) >= 2 && args[0] == "ticket" && args[1] == "show":
 		os.Exit(runTicketShow(args[2:]))
 	case len(args) == 2 && args[0] == "ticket" && args[1] == "list":
@@ -79,54 +83,107 @@ func resolve(rev string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func refereeDiff(baseRev, headRev string) ([]referee.Finding, error) {
-	base, err := resolve(baseRev)
-	if err != nil {
-		return nil, err
+// changes resolves two revisions and lists the files that differ between them.
+func changes(baseRev, headRev string) (base, head string, cs []referee.Change, err error) {
+	if base, err = resolve(baseRev); err != nil {
+		return "", "", nil, err
 	}
-	head, err := resolve(headRev)
-	if err != nil {
-		return nil, err
+	if head, err = resolve(headRev); err != nil {
+		return "", "", nil, err
 	}
 	// -z: paths arrive as raw bytes. Without it git quotes unusual names and
-	// the _test.go suffix check does not match.
+	// a check on the path does not match.
 	out, err := exec.Command("git", "diff", "--name-status", "-M", "-z", base, head).Output()
 	if err != nil {
-		return nil, fmt.Errorf("git diff %s %s: %w", base, head, err)
+		return "", "", nil, fmt.Errorf("git diff %s %s: %w", base, head, err)
 	}
-	findings := []referee.Finding{}
 	f := strings.Split(strings.TrimSuffix(string(out), "\x00"), "\x00")
 	for i := 0; i < len(f) && f[i] != ""; {
 		status, paths := f[i], 1
+		// Fail closed: a status that this code does not know is not a clean file.
+		if !strings.ContainsRune("ACDMRT", rune(status[0])) {
+			return "", "", nil, fmt.Errorf("git diff: unknown file status %q", status)
+		}
 		if status[0] == 'R' || status[0] == 'C' {
 			paths = 2 // old path, new path
 		}
 		if i+paths >= len(f) {
-			return nil, fmt.Errorf("git diff: unexpected output")
+			return "", "", nil, fmt.Errorf("git diff: unexpected output")
 		}
-		oldPath, newPath := f[i+1], f[i+paths]
+		cs = append(cs, referee.Change{Status: status[0], Old: f[i+1], New: f[i+paths]})
 		i += paths + 1
-		if !strings.HasSuffix(oldPath, "_test.go") && !strings.HasSuffix(newPath, "_test.go") {
+	}
+	return base, head, cs, nil
+}
+
+func refereeDiff(baseRev, headRev string) ([]referee.Finding, error) {
+	base, head, cs, err := changes(baseRev, headRev)
+	if err != nil {
+		return nil, err
+	}
+	findings := []referee.Finding{}
+	for _, c := range cs {
+		if !strings.HasSuffix(c.Old, "_test.go") && !strings.HasSuffix(c.New, "_test.go") {
 			continue
 		}
 		var b, h []byte
-		if status[0] != 'A' {
-			if b, err = show(base, oldPath); err != nil {
+		if c.Status != 'A' {
+			if b, err = show(base, c.Old); err != nil {
 				return nil, err
 			}
 		}
-		if status[0] != 'D' {
-			if h, err = show(head, newPath); err != nil {
+		if c.Status != 'D' {
+			if h, err = show(head, c.New); err != nil {
 				return nil, err
 			}
 		}
-		fs, err := referee.Diff(newPath, b, h)
+		fs, err := referee.Diff(c.New, b, h)
 		if err != nil {
 			return nil, err
 		}
 		findings = append(findings, fs...)
 	}
 	return findings, nil
+}
+
+// runRefereeScope exits 0 when all changed files are in the ticket's scope, 1
+// on findings, 2 when the check could not run.
+func runRefereeScope(args []string) int {
+	fl := flag.NewFlagSet("referee scope", flag.ContinueOnError)
+	number := fl.Int("ticket", 0, "issue number of the ticket")
+	base := fl.String("base", "", "base revision")
+	head := fl.String("head", "HEAD", "head revision")
+	if err := fl.Parse(args); err != nil {
+		return 2
+	}
+	if *number <= 0 || *base == "" || fl.NArg() != 0 {
+		fmt.Fprintln(os.Stderr, "usage: yantra referee scope --ticket <number> --base <rev> [--head <rev>]")
+		return 2
+	}
+	t, err := fetchTicket(*number)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "referee:", err)
+		return 2
+	}
+	if !t.Ready {
+		// Fail closed: without scope paths there is nothing to check against.
+		fmt.Fprintf(os.Stderr, "referee: ticket %d is not ready: %s\n", t.Number, strings.Join(t.Reasons, ", "))
+		return 2
+	}
+	_, _, cs, err := changes(*base, *head)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "referee:", err)
+		return 2
+	}
+	findings := referee.OutOfScope(cs, t.Scope)
+	if err := printJSON(findings); err != nil {
+		fmt.Fprintln(os.Stderr, "referee:", err)
+		return 2
+	}
+	if len(findings) > 0 {
+		return 1
+	}
+	return 0
 }
 
 func show(rev, path string) ([]byte, error) {
@@ -163,6 +220,20 @@ func (is *issue) valid() bool {
 	return is != nil && is.Number > 0 && is.Title != "" && is.State != ""
 }
 
+// fetchTicket reads one issue through gh. The number is an integer, so no
+// caller text reaches gh.
+func fetchTicket(n int) (ticket.Ticket, error) {
+	out, err := exec.Command("gh", "issue", "view", strconv.Itoa(n), "--json", issueFields).Output()
+	if err != nil {
+		return ticket.Ticket{}, fmt.Errorf("gh issue view %d: %w", n, err)
+	}
+	var is issue
+	if err := json.Unmarshal(out, &is); err != nil || !is.valid() || is.Number != n {
+		return ticket.Ticket{}, fmt.Errorf("unexpected gh output for issue %d", n)
+	}
+	return ticket.New(is.Number, is.Title, is.State, is.Body), nil
+}
+
 // runTicketShow exits 0 when the ticket is ready, 1 when it is not ready, 2
 // when the ticket could not be read.
 func runTicketShow(args []string) int {
@@ -176,17 +247,11 @@ func runTicketShow(args []string) int {
 		fmt.Fprintf(os.Stderr, "ticket: not a positive issue number: %q\n", args[0])
 		return 2
 	}
-	out, err := exec.Command("gh", "issue", "view", strconv.Itoa(n), "--json", issueFields).Output()
+	t, err := fetchTicket(n)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ticket: gh issue view %d: %v\n", n, err)
+		fmt.Fprintln(os.Stderr, "ticket:", err)
 		return 2
 	}
-	var is issue
-	if err := json.Unmarshal(out, &is); err != nil || !is.valid() || is.Number != n {
-		fmt.Fprintf(os.Stderr, "ticket: unexpected gh output for issue %d\n", n)
-		return 2
-	}
-	t := ticket.New(is.Number, is.Title, is.State, is.Body)
 	if err := printJSON(t); err != nil {
 		fmt.Fprintln(os.Stderr, "ticket:", err)
 		return 2
