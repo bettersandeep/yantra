@@ -1,0 +1,330 @@
+2026-11-28T02:57:48Z $ gh repo clone bettersandeep/lekha /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo
+exit code 0
+Cloning into '/Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo'...
+2026-11-28T02:57:48Z $ git -c core.hooksPath=/dev/null for-each-ref --format=%(refname:short) refs/remotes/origin/
+exit code 0
+origin
+origin/agents-md
+origin/branch-names
+origin/case-expressions-in-select-24
+origin/expr-arith
+origin/forbid-unsafe
+origin/main
+origin/rename-lekha
+origin/rule-check-source
+origin/runner-state
+origin/slt-harness
+origin/ticket-10
+origin/ticket-11
+origin/ticket-18
+origin/ticket-20
+origin/yantra-runner
+2026-11-28T02:57:48Z $ git -c core.hooksPath=/dev/null checkout -b the-engine-returns-a-13 origin/main
+exit code 0
+branch 'the-engine-returns-a-13' set up to track 'origin/main'.
+Switched to a new branch 'the-engine-returns-a-13'
+2026-11-28T02:57:48Z $ git -C /Users/sandeepsingh/anti-gravity/qudo/lekha config user.name
+exit code 0
+Sandeep Singh
+2026-11-28T02:57:48Z $ git -C /Users/sandeepsingh/anti-gravity/qudo/lekha config user.email
+exit code 0
+14184381+bettersandeep@users.noreply.github.com
+2026-11-28T02:57:48Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com show origin/main:ci/guard.sh
+exit code 0
+#!/bin/sh
+# Checks that protect the score. CI runs this before the build.
+set -eu
+cd "$(dirname "$0")/.."
+tmp=$(mktemp -d)
+
+# 1. The manifest lists each test file and nothing else, and each file
+#    matches its checksum. A count is not enough: the paths are compared.
+(
+	cd tests/slt
+	find . -name '*.test' | sed 's|^\./||' | LC_ALL=C sort >"$tmp/files"
+	cut -c67- SHA256SUMS | LC_ALL=C sort >"$tmp/listed"
+	if ! diff "$tmp/files" "$tmp/listed"; then
+		echo "guard: the test files and SHA256SUMS do not list the same paths" >&2
+		exit 1
+	fi
+	sha256sum -c --quiet SHA256SUMS
+)
+
+# 2. No dependency. The lock file has one package. The cargo commands in CI
+#    use --locked, so a dependency in Cargo.toml that is not in the lock file
+#    stops the build.
+if [ "$(grep -c '^\[\[package\]\]' Cargo.lock)" -ne 1 ]; then
+	echo "guard: Cargo.lock has more than one package" >&2
+	exit 1
+fi
+
+# 3. In a pull request, a change to the engine and a change to the things
+#    that measure it do not go together. Check 1 alone cannot stop a pull
+#    request that edits a test file and its checksum in one change.
+#    --no-renames: a rename shows its old path too, so a file that moves
+#    from the measure side into src/ is seen on both sides.
+#    yantra/ is on the measure side: the runner and the brief of the agents
+#    check the engine, so the engine does not change with them.
+if [ "${GITHUB_EVENT_NAME:-}" = pull_request ] || [ "${GITHUB_EVENT_NAME:-}" = pull_request_target ]; then
+	changed=$(git -c core.quotePath=false diff --no-renames --name-only "origin/${GITHUB_BASE_REF}...HEAD")
+	engine=$(printf '%s\n' "$changed" | grep -E '^(src/|Cargo\.toml$|Cargo\.lock$)' || true)
+	measure=$(printf '%s\n' "$changed" | grep -E '^(tests/slt\.rs$|tests/slt/|\.github/|ci/|yantra/)' | grep -v '^tests/slt/baseline\.txt$' || true)
+	if [ -n "$engine" ] && [ -n "$measure" ]; then
+		echo "guard: this pull request changes the engine and the things that measure it" >&2
+		printf 'engine:\n%s\nmeasure:\n%s\n' "$engine" "$measure" >&2
+		exit 1
+	fi
+fi
+echo "guard: ok"
+2026-11-28T02:57:48Z old score: 9644
+2026-11-28T02:57:48Z agent start 1: claude -p <prompt> --tools Read,Edit,Write,Glob,Grep,Bash --allowedTools Read(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/**) Read(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/input/**) Edit(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/**) Bash(/Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/bin/yt *) --disallowedTools Edit(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/.git/**) --permission-mode dontAsk --strict-mcp-config --safe-mode
+2026-11-28T03:04:43Z agent start 1: exit code 0
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com add -A
+exit code 0
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com diff --cached --quiet
+exit code 1
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com commit -q -m Ticket #13: The engine returns a value where SQLite gives an error for its limits
+exit code 0
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com clean -ffdxq
+exit code 0
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com status --porcelain --ignored
+exit code 0
+2026-11-28T03:04:43Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c core.quotePath=false diff --no-renames origin/main...HEAD --name-only
+exit code 0
+README.md
+src/select.rs
+2026-11-28T03:04:43Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo:/src:ro -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/guard.sh:/src/ci/guard.sh:ro golang:1.23 sh -c git config --global --add safe.directory "*" && cd /src && GITHUB_EVENT_NAME=pull_request GITHUB_BASE_REF=main sh ci/guard.sh
+exit code 0
+guard: ok
+2026-11-28T03:04:46Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo:/src:ro yantra-rust:1.96.1 sh -c cp -r /src /tmp/w && cd /tmp/w && cargo fmt --check && cargo clippy --locked --offline --all-targets -- -D warnings && cargo test --locked --offline -- --nocapture
+exit code 0
+
+running 47 tests
+test lexer::tests::rejects_unsupported_text ... ok
+test lexer::tests::splits_words_numbers_and_operators ... ok
+test select::tests::aggregate_in_a_larger_expression ... ok
+test select::tests::case_keywords_ignore_case_and_white_space ... ok
+test select::tests::case_errors ... ok
+test select::tests::aggregate_inside_an_aggregate_is_an_error ... ok
+test lexer::tests::splits_comparison_operators ... ok
+test select::tests::case_with_a_base_takes_the_first_equal_when ... ok
+test select::tests::case_without_a_base_takes_the_first_true_when ... ok
+test select::tests::cast_to_integer_returns_the_argument ... ok
+test select::tests::cast_errors ... ok
+test select::tests::cast_ignores_case_and_white_space ... ok
+test select::tests::coalesce_returns_the_first_value_that_is_not_null ... ok
+test select::tests::comparison_gives_one_zero_or_null ... ok
+test select::tests::cast_with_each_other_expression ... ok
+test select::tests::count_of_the_one_row ... ok
+test select::tests::division_and_modulo_signs ... ok
+test select::tests::each_other_function_is_an_error ... ok
+test select::tests::error_in_a_part_of_a_case_is_an_error ... ok
+test select::tests::error_in_an_argument_is_an_error ... ok
+test select::tests::function_argument_limit ... ok
+test select::tests::column_limit ... ok
+test select::tests::function_names_ignore_case_and_white_space ... ok
+test select::tests::comparison_result_is_an_integer_operand ... ok
+test select::tests::i64_limits ... ok
+test select::tests::is_null_and_is_not_null_give_one_or_zero ... ok
+test select::tests::min_max_and_sum_of_one_value ... ok
+test select::tests::not_and_or_follow_three_valued_logic ... ok
+test select::tests::not_as_an_operand_takes_the_rest_of_the_expression ... ok
+test select::tests::null_literal_and_arithmetic ... ok
+test select::tests::nullif_compares_its_two_arguments ... ok
+test select::tests::other_aggregates_and_scalar_min_max_are_errors ... ok
+test select::tests::other_operators_are_errors ... ok
+test select::tests::overflow_is_an_error ... ok
+test select::tests::precedence_and_left_associativity ... ok
+test select::tests::height_limit_of_the_ticket ... ok
+test select::tests::precedence_of_comparison_and_boolean_operators ... ok
+test select::tests::select_list_keywords_and_aliases ... ok
+test select::tests::unary_chains ... ok
+test select::tests::unsupported_input_is_an_error ... ok
+test select::tests::wrong_argument_count_is_an_error ... ok
+test select::tests::zero_division_and_null ... ok
+test tests::version_is_set ... ok
+test tests::execute_returns_one_row ... ok
+test select::tests::deep_nesting_is_an_error ... ok
+test select::tests::height_of_each_expression ... ok
+test select::tests::case_with_each_other_expression ... ok
+
+test result: ok. 47 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+test comment_lines_are_removed_before_parsing ... ok
+test baseline_must_match_exactly ... ok
+test compare_applies_the_sort_mode ... ok
+test parse_fails_closed ... ok
+test query_without_results_expects_an_empty_set ... ok
+test render_follows_the_column_type ... ok
+test parse_reads_records_and_conditions ... ok
+test run_decides_pass_or_fail ... ok
+test unprintable_text_renders_as_at ... ok
+slt: random/expr/slt_good_0.test 9644/10012
+test slt ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Checking lekha v0.0.0 (/tmp/w)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.52s
+   Compiling lekha v0.0.0 (/tmp/w)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.26s
+     Running unittests src/lib.rs (target/debug/deps/lekha-64235b9370dff239)
+     Running unittests src/main.rs (target/debug/deps/lekha-7c6faf1f186577e0)
+     Running tests/slt.rs (target/debug/deps/slt-5c1aafed4a72709e)
+   Doc-tests lekha
+2026-11-28T03:04:46Z checks passed, score 9644 -> 9644 of 10012
+2026-11-28T03:04:48Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c credential.helper= -c credential.helper=!gh auth git-credential push -u origin the-engine-returns-a-13
+exit code 0
+branch 'the-engine-returns-a-13' set up to track 'origin/the-engine-returns-a-13'.
+remote: 
+remote: Create a pull request for 'the-engine-returns-a-13' on GitHub by visiting:        
+remote:      https://github.com/bettersandeep/lekha/pull/new/the-engine-returns-a-13        
+remote: 
+To https://github.com/bettersandeep/lekha.git
+ * [new branch]      the-engine-returns-a-13 -> the-engine-returns-a-13
+2026-11-28T03:04:51Z $ gh pr create -R bettersandeep/lekha --head the-engine-returns-a-13 --base main --title The engine returns a value where SQLite gives an error for its limits --body-file /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/pr-body.md
+exit code 0
+https://github.com/bettersandeep/lekha/pull/33
+2026-11-28T03:04:51Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com rev-parse HEAD
+exit code 0
+e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19
+2026-11-28T03:04:52Z wait for the review of e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19: review: none, CI: pending
+2026-11-28T03:05:23Z wait for the review of e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19: review: none, CI: success
+2026-11-28T03:05:54Z wait for the review of e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19: review: none, CI: success
+2026-11-28T03:06:25Z wait for the review of e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19: review: none, CI: success
+2026-11-28T03:06:57Z review of e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19: findings, findings: 2, CI: success
+2026-11-28T03:06:57Z agent start 2: claude -p <prompt> --tools Read,Edit,Write,Glob,Grep,Bash --allowedTools Read(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/**) Read(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/input/**) Edit(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/**) Bash(/Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/bin/yt *) --disallowedTools Edit(//Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo/.git/**) --permission-mode dontAsk --strict-mcp-config --safe-mode
+2026-11-28T03:08:33Z agent start 2: exit code 0
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com add -A
+exit code 0
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com diff --cached --quiet
+exit code 1
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com commit -q -m Ticket #13: fixes after checks or review, round 2
+exit code 0
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com clean -ffdxq
+exit code 0
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com status --porcelain --ignored
+exit code 0
+2026-11-28T03:08:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c core.quotePath=false diff --no-renames origin/main...HEAD --name-only
+exit code 0
+README.md
+src/select.rs
+2026-11-28T03:08:34Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo:/src:ro -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/guard.sh:/src/ci/guard.sh:ro golang:1.23 sh -c git config --global --add safe.directory "*" && cd /src && GITHUB_EVENT_NAME=pull_request GITHUB_BASE_REF=main sh ci/guard.sh
+exit code 0
+guard: ok
+2026-11-28T03:08:36Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/repo:/src:ro yantra-rust:1.96.1 sh -c cp -r /src /tmp/w && cd /tmp/w && cargo fmt --check && cargo clippy --locked --offline --all-targets -- -D warnings && cargo test --locked --offline -- --nocapture
+exit code 0
+
+running 48 tests
+test lexer::tests::rejects_unsupported_text ... ok
+test lexer::tests::splits_comparison_operators ... ok
+test select::tests::aggregate_in_a_larger_expression ... ok
+test lexer::tests::splits_words_numbers_and_operators ... ok
+test select::tests::aggregate_inside_an_aggregate_is_an_error ... ok
+test select::tests::case_keywords_ignore_case_and_white_space ... ok
+test select::tests::case_with_a_base_takes_the_first_equal_when ... ok
+test select::tests::case_errors ... ok
+test select::tests::case_without_a_base_takes_the_first_true_when ... ok
+test select::tests::cast_errors ... ok
+test select::tests::cast_to_integer_returns_the_argument ... ok
+test select::tests::coalesce_returns_the_first_value_that_is_not_null ... ok
+test select::tests::comparison_gives_one_zero_or_null ... ok
+test select::tests::cast_with_each_other_expression ... ok
+test select::tests::cast_ignores_case_and_white_space ... ok
+test select::tests::count_of_the_one_row ... ok
+test select::tests::division_and_modulo_signs ... ok
+test select::tests::column_limit ... ok
+test select::tests::error_in_a_part_of_a_case_is_an_error ... ok
+test select::tests::error_in_an_argument_is_an_error ... ok
+test select::tests::each_other_function_is_an_error ... ok
+test select::tests::function_argument_limit ... ok
+test select::tests::function_names_ignore_case_and_white_space ... ok
+test select::tests::comparison_result_is_an_integer_operand ... ok
+test select::tests::height_limit_of_the_ticket ... ok
+test select::tests::i64_limits ... ok
+test select::tests::is_null_and_is_not_null_give_one_or_zero ... ok
+test select::tests::min_max_and_sum_of_one_value ... ok
+test select::tests::not_and_or_follow_three_valued_logic ... ok
+test select::tests::deep_nesting_is_an_error ... ok
+test select::tests::not_as_an_operand_takes_the_rest_of_the_expression ... ok
+test select::tests::height_of_each_comparison_operator ... ok
+test select::tests::null_literal_and_arithmetic ... ok
+test select::tests::nullif_compares_its_two_arguments ... ok
+test select::tests::other_aggregates_and_scalar_min_max_are_errors ... ok
+test select::tests::other_operators_are_errors ... ok
+test select::tests::overflow_is_an_error ... ok
+test select::tests::precedence_and_left_associativity ... ok
+test select::tests::precedence_of_comparison_and_boolean_operators ... ok
+test select::tests::select_list_keywords_and_aliases ... ok
+test select::tests::unary_chains ... ok
+test select::tests::unsupported_input_is_an_error ... ok
+test select::tests::wrong_argument_count_is_an_error ... ok
+test select::tests::zero_division_and_null ... ok
+test tests::execute_returns_one_row ... ok
+test tests::version_is_set ... ok
+test select::tests::height_of_each_expression ... ok
+test select::tests::case_with_each_other_expression ... ok
+
+test result: ok. 48 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+test baseline_must_match_exactly ... ok
+test compare_applies_the_sort_mode ... ok
+test comment_lines_are_removed_before_parsing ... ok
+test query_without_results_expects_an_empty_set ... ok
+test parse_reads_records_and_conditions ... ok
+test parse_fails_closed ... ok
+test render_follows_the_column_type ... ok
+test unprintable_text_renders_as_at ... ok
+test run_decides_pass_or_fail ... ok
+slt: random/expr/slt_good_0.test 9644/10012
+test slt ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Checking lekha v0.0.0 (/tmp/w)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.48s
+   Compiling lekha v0.0.0 (/tmp/w)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.10s
+     Running unittests src/lib.rs (target/debug/deps/lekha-64235b9370dff239)
+     Running unittests src/main.rs (target/debug/deps/lekha-7c6faf1f186577e0)
+     Running tests/slt.rs (target/debug/deps/slt-5c1aafed4a72709e)
+   Doc-tests lekha
+2026-11-28T03:08:36Z checks passed, score 9644 -> 9644 of 10012
+2026-11-28T03:08:38Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c credential.helper= -c credential.helper=!gh auth git-credential push -u origin the-engine-returns-a-13
+exit code 0
+branch 'the-engine-returns-a-13' set up to track 'origin/the-engine-returns-a-13'.
+To https://github.com/bettersandeep/lekha.git
+   e63b10b..d3a7d59  the-engine-returns-a-13 -> the-engine-returns-a-13
+2026-11-28T03:08:39Z $ gh api -X PATCH repos/bettersandeep/lekha/pulls/33 -F body=@/Users/sandeepsingh/.local/state/yantra/runs/the-engine-returns-a-13-20261128T025742Z/pr-body.md
+exit code 0
+rl":"https://api.github.com/repos/bettersandeep/lekha/git/refs{/sha}","trees_url":"https://api.github.com/repos/bettersandeep/lekha/git/trees{/sha}","statuses_url":"https://api.github.com/repos/bettersandeep/lekha/statuses/{sha}","languages_url":"https://api.github.com/repos/bettersandeep/lekha/languages","stargazers_url":"https://api.github.com/repos/bettersandeep/lekha/stargazers","contributors_url":"https://api.github.com/repos/bettersandeep/lekha/contributors","subscribers_url":"https://api.github.com/repos/bettersandeep/lekha/subscribers","subscription_url":"https://api.github.com/repos/bettersandeep/lekha/subscription","commits_url":"https://api.github.com/repos/bettersandeep/lekha/commits{/sha}","git_commits_url":"https://api.github.com/repos/bettersandeep/lekha/git/commits{/sha}","comments_url":"https://api.github.com/repos/bettersandeep/lekha/comments{/number}","issue_comment_url":"https://api.github.com/repos/bettersandeep/lekha/issues/comments{/number}","contents_url":"https://api.github.com/repos/bettersandeep/lekha/contents/{+path}","compare_url":"https://api.github.com/repos/bettersandeep/lekha/compare/{base}...{head}","merges_url":"https://api.github.com/repos/bettersandeep/lekha/merges","archive_url":"https://api.github.com/repos/bettersandeep/lekha/{archive_format}{/ref}","downloads_url":"https://api.github.com/repos/bettersandeep/lekha/downloads","issues_url":"https://api.github.com/repos/bettersandeep/lekha/issues{/number}","pulls_url":"https://api.github.com/repos/bettersandeep/lekha/pulls{/number}","milestones_url":"https://api.github.com/repos/bettersandeep/lekha/milestones{/number}","notifications_url":"https://api.github.com/repos/bettersandeep/lekha/notifications{?since,all,participating}","labels_url":"https://api.github.com/repos/bettersandeep/lekha/labels{/name}","releases_url":"https://api.github.com/repos/bettersandeep/lekha/releases{/id}","deployments_url":"https://api.github.com/repos/bettersandeep/lekha/deployments","created_at":"2026-11-25T07:58:30Z","updated_at":"2026-11-28T02:45:04Z","pushed_at":"2026-11-28T03:08:38Z","git_url":"git://github.com/bettersandeep/lekha.git","ssh_url":"git@github.com:bettersandeep/lekha.git","clone_url":"https://github.com/bettersandeep/lekha.git","svn_url":"https://github.com/bettersandeep/lekha","homepage":null,"size":503,"stargazers_count":0,"watchers_count":0,"language":"Python","has_issues":true,"has_projects":true,"has_downloads":false,"has_wiki":true,"has_pages":false,"has_discussions":false,"forks_count":0,"mirror_url":null,"archived":false,"disabled":false,"open_issues_count":2,"license":{"key":"mit","name":"MIT License","spdx_id":"MIT","url":"https://api.github.com/licenses/mit","node_id":"MDc6TGljZW5zZTEz"},"allow_forking":true,"is_template":false,"web_commit_signoff_required":false,"has_pull_requests":true,"pull_request_creation_policy":"all","topics":[],"visibility":"public","forks":0,"open_issues":2,"watchers":0,"default_branch":"main"}},"_links":{"self":{"href":"https://api.github.com/repos/bettersandeep/lekha/pulls/33"},"html":{"href":"https://github.com/bettersandeep/lekha/pull/33"},"issue":{"href":"https://api.github.com/repos/bettersandeep/lekha/issues/33"},"comments":{"href":"https://api.github.com/repos/bettersandeep/lekha/issues/33/comments"},"review_comments":{"href":"https://api.github.com/repos/bettersandeep/lekha/pulls/33/comments"},"review_comment":{"href":"https://api.github.com/repos/bettersandeep/lekha/pulls/comments{/number}"},"commits":{"href":"https://api.github.com/repos/bettersandeep/lekha/pulls/33/commits"},"statuses":{"href":"https://api.github.com/repos/bettersandeep/lekha/statuses/e63b10b8b2416e9c9e5e76c9aeaf4428dc141f19"}},"author_association":"OWNER","auto_merge":null,"assignee":null,"active_lock_reason":null,"merged":false,"mergeable":true,"rebaseable":true,"mergeable_state":"clean","merged_by":null,"comments":2,"review_comments":0,"maintainer_can_modify":false,"commits":1,"additions":378,"deletions":51,"changed_files":2}
+2026-11-28T03:08:39Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com rev-parse HEAD
+exit code 0
+d3a7d595862cee55a1de1482d66dc63ebdf78e02
+2026-11-28T03:08:41Z wait for the review of d3a7d595862cee55a1de1482d66dc63ebdf78e02: review: none, CI: pending
+2026-11-28T03:09:12Z review of d3a7d595862cee55a1de1482d66dc63ebdf78e02: error, findings: 0, CI: success
+2026-11-28T03:09:12Z end state: needs-human. the runner does not understand the Qodo review of d3a7d595862cee55a1de1482d66dc63ebdf78e02

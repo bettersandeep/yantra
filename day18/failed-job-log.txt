@@ -1,0 +1,31 @@
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	﻿2026-11-28T03:01:25.4254247Z ##[group]Run python3 -m unittest discover -s yantra -p 'test_*.py'
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.4256333Z ^[[36;1mpython3 -m unittest discover -s yantra -p 'test_*.py'^[[0m
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.4279326Z shell: /usr/bin/bash -e {0}
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.4280664Z ##[endgroup]
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.6984041Z .....................................................F.........................
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.6987061Z ======================================================================
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.6993249Z FAIL: test_a_missing_image_stops_the_run_before_a_write (test_runner.StartTest.test_a_missing_image_stops_the_run_before_a_write)
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.6997849Z ----------------------------------------------------------------------
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7000142Z Traceback (most recent call last):
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7003408Z   File "/home/runner/work/lekha/lekha/yantra/test_runner.py", line 548, in test_a_missing_image_stops_the_run_before_a_write
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7008035Z     self.assertEqual(runner.preconditions(), ["the Docker image `%s` is not on this machine" % image])
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7011773Z     ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7015995Z AssertionError: Lists differ: ['the[30 chars]6.1` is not on this machine. See "Images" in yantra/README.md'] != ['the[30 chars]6.1` is not on this machine']
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7019976Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7020764Z First differing element 0:
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7023664Z 'the [28 chars]96.1` is not on this machine. See "Images" in yantra/README.md'
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7026816Z 'the [28 chars]96.1` is not on this machine'
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7028394Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7029885Z - ['the Docker image `yantra-rust:1.96.1` is not on this machine. See "Images" '
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7032748Z ?                                                               ---------------
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7034237Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7035252Z + ['the Docker image `yantra-rust:1.96.1` is not on this machine']
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7037783Z ?                                                                +
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7039243Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7039977Z -  'in yantra/README.md']
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7040955Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7042033Z ----------------------------------------------------------------------
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7044368Z Ran 79 tests in 0.195s
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7045327Z 
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7108823Z FAILED (failures=1)
+test	Run python3 -m unittest discover -s yantra -p 'test_*.py'	2026-11-28T03:01:25.7121481Z ##[error]Process completed with exit code 1.
