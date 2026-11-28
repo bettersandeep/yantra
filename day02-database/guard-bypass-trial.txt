@@ -1,0 +1,5 @@
+0. no change (control): old steps PASS, new guard PASS
+1. edit a test file and its checksum together, in an engine change: old steps PASS, new guard FAIL
+2. list another file in the manifest in place of the test file: old steps PASS, new guard FAIL
+3. add a dependency to Cargo.toml only: old lock-file count check PASS
+   cargo test --locked: FAIL ()

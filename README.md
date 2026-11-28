@@ -13,3 +13,4 @@ It has no code.
 - `day03/ticket5-acceptance-run.txt`, `day03/ticket6-acceptance-run.txt`: the output of the new commands against the real issues and commits of this repo.
 - `day03/qodo-first-review-pr7.md`, `day03/qodo-first-review-pr8.md`: the body of the first Qodo review comment on each pull request, as the GitHub API returned it before the re-review replaced it.
 - `day01-database/`: evidence for the Day 1 post after it moved to the database repo `yantra-sql`. The two Qodo files are comment bodies from the GitHub API. `edge-probe.rs` is a throwaway test that was run against the merged engine, and `edge-probe-output.txt` is its output.
+- `day02-database/`: evidence for the Day 2 post on the database repo. `guard-bypass-trial.sh` tries ways past the checks, and `guard-bypass-trial.txt` is its output for the first CI steps and for the guard script that replaced them.
