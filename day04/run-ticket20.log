@@ -1,0 +1,183 @@
+2026-11-28T02:16:45Z $ gh repo clone bettersandeep/lekha /Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo
+exit code 0
+Cloning into '/Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo'...
+2026-11-28T02:16:45Z $ git -c core.hooksPath=/dev/null show-ref --verify --quiet refs/remotes/origin/ticket-20
+exit code 1
+2026-11-28T02:16:45Z $ git -c core.hooksPath=/dev/null checkout -b ticket-20 origin/main
+exit code 0
+branch 'ticket-20' set up to track 'origin/main'.
+Switched to a new branch 'ticket-20'
+2026-11-28T02:16:45Z $ git -C /Users/sandeepsingh/anti-gravity/qudo/lekha config user.name
+exit code 0
+Sandeep Singh
+2026-11-28T02:16:45Z $ git -C /Users/sandeepsingh/anti-gravity/qudo/lekha config user.email
+exit code 0
+14184381+bettersandeep@users.noreply.github.com
+2026-11-28T02:16:46Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com show origin/main:ci/guard.sh
+exit code 0
+#!/bin/sh
+# Checks that protect the score. CI runs this before the build.
+set -eu
+cd "$(dirname "$0")/.."
+tmp=$(mktemp -d)
+
+# 1. The manifest lists each test file and nothing else, and each file
+#    matches its checksum. A count is not enough: the paths are compared.
+(
+	cd tests/slt
+	find . -name '*.test' | sed 's|^\./||' | LC_ALL=C sort >"$tmp/files"
+	cut -c67- SHA256SUMS | LC_ALL=C sort >"$tmp/listed"
+	if ! diff "$tmp/files" "$tmp/listed"; then
+		echo "guard: the test files and SHA256SUMS do not list the same paths" >&2
+		exit 1
+	fi
+	sha256sum -c --quiet SHA256SUMS
+)
+
+# 2. No dependency. The lock file has one package. The cargo commands in CI
+#    use --locked, so a dependency in Cargo.toml that is not in the lock file
+#    stops the build.
+if [ "$(grep -c '^\[\[package\]\]' Cargo.lock)" -ne 1 ]; then
+	echo "guard: Cargo.lock has more than one package" >&2
+	exit 1
+fi
+
+# 3. In a pull request, a change to the engine and a change to the things
+#    that measure it do not go together. Check 1 alone cannot stop a pull
+#    request that edits a test file and its checksum in one change.
+#    --no-renames: a rename shows its old path too, so a file that moves
+#    from the measure side into src/ is seen on both sides.
+#    yantra/ is on the measure side: the runner and the brief of the agents
+#    check the engine, so the engine does not change with them.
+if [ "${GITHUB_EVENT_NAME:-}" = pull_request ]; then
+	changed=$(git -c core.quotePath=false diff --no-renames --name-only "origin/${GITHUB_BASE_REF}...HEAD")
+	engine=$(printf '%s\n' "$changed" | grep -E '^(src/|Cargo\.toml$|Cargo\.lock$)' || true)
+	measure=$(printf '%s\n' "$changed" | grep -E '^(tests/slt\.rs$|tests/slt/|\.github/|ci/|yantra/)' | grep -v '^tests/slt/baseline\.txt$' || true)
+	if [ -n "$engine" ] && [ -n "$measure" ]; then
+		echo "guard: this pull request changes the engine and the things that measure it" >&2
+		printf 'engine:\n%s\nmeasure:\n%s\n' "$engine" "$measure" >&2
+		exit 1
+	fi
+fi
+echo "guard: ok"
+2026-11-28T02:16:46Z old score: 8995
+2026-11-28T02:16:46Z agent start 1: claude -p <prompt> --tools Read,Edit,Write,Glob,Grep,Bash --allowedTools Read(//Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo/**) Read(//Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/input/**) Edit(//Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo/**) Bash(/Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/bin/yt *) --disallowedTools Edit(//Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo/.git/**) --permission-mode dontAsk --strict-mcp-config --safe-mode
+2026-11-28T02:20:25Z agent start 1: exit code 0
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com add -A
+exit code 0
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com diff --cached --quiet
+exit code 1
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com commit -q -m Ticket #20: Comparison and boolean operators in SELECT without FROM
+exit code 0
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com clean -ffdxq
+exit code 0
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com status --porcelain --ignored
+exit code 0
+2026-11-28T02:20:25Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c core.quotePath=false diff --no-renames origin/main...HEAD --name-only
+exit code 0
+README.md
+src/lexer.rs
+src/select.rs
+2026-11-28T02:20:26Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo:/src:ro -v /Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/guard.sh:/src/ci/guard.sh:ro golang:1.23 sh -c git config --global --add safe.directory "*" && cd /src && GITHUB_EVENT_NAME=pull_request GITHUB_BASE_REF=main sh ci/guard.sh
+exit code 0
+guard: ok
+2026-11-28T02:20:28Z $ docker run --rm --network none --pull never -v /Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/repo:/src:ro yantra-rust:1.96.1 sh -c cp -r /src /tmp/w && cd /tmp/w && cargo fmt --check && cargo clippy --locked --offline --all-targets -- -D warnings && cargo test --locked --offline -- --nocapture
+exit code 0
+
+running 37 tests
+test lexer::tests::rejects_unsupported_text ... ok
+test lexer::tests::splits_words_numbers_and_operators ... ok
+test select::tests::aggregate_in_a_larger_expression ... ok
+test select::tests::aggregate_inside_an_aggregate_is_an_error ... ok
+test lexer::tests::splits_comparison_operators ... ok
+test select::tests::cast_errors ... ok
+test select::tests::cast_ignores_case_and_white_space ... ok
+test select::tests::cast_to_integer_returns_the_argument ... ok
+test select::tests::cast_with_each_other_expression ... ok
+test select::tests::coalesce_returns_the_first_value_that_is_not_null ... ok
+test select::tests::comparison_gives_one_zero_or_null ... ok
+test select::tests::count_of_the_one_row ... ok
+test select::tests::division_and_modulo_signs ... ok
+test select::tests::each_other_function_is_an_error ... ok
+test select::tests::error_in_an_argument_is_an_error ... ok
+test select::tests::function_names_ignore_case_and_white_space ... ok
+test select::tests::i64_limits ... ok
+test select::tests::is_null_and_is_not_null_give_one_or_zero ... ok
+test select::tests::min_max_and_sum_of_one_value ... ok
+test select::tests::not_and_or_follow_three_valued_logic ... ok
+test select::tests::null_literal_and_arithmetic ... ok
+test select::tests::not_as_an_operand_takes_the_rest_of_the_expression ... ok
+test select::tests::nullif_compares_its_two_arguments ... ok
+test select::tests::other_aggregates_and_scalar_min_max_are_errors ... ok
+test select::tests::overflow_is_an_error ... ok
+test select::tests::precedence_and_left_associativity ... ok
+test select::tests::other_operators_are_errors ... ok
+test select::tests::unary_chains ... ok
+test select::tests::precedence_of_comparison_and_boolean_operators ... ok
+test select::tests::unsupported_input_is_an_error ... ok
+test select::tests::wrong_argument_count_is_an_error ... ok
+test select::tests::zero_division_and_null ... ok
+test tests::execute_returns_one_row ... ok
+test select::tests::select_list_keywords_and_aliases ... ok
+test tests::version_is_set ... ok
+test select::tests::comparison_result_is_an_integer_operand ... ok
+test select::tests::deep_nesting_is_an_error ... ok
+
+test result: ok. 37 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+running 10 tests
+test baseline_must_match_exactly ... ok
+test compare_applies_the_sort_mode ... ok
+test parse_reads_records_and_conditions ... ok
+test query_without_results_expects_an_empty_set ... ok
+test comment_lines_are_removed_before_parsing ... ok
+test unprintable_text_renders_as_at ... ok
+test render_follows_the_column_type ... ok
+test run_decides_pass_or_fail ... ok
+test parse_fails_closed ... ok
+slt: random/expr/slt_good_0.test 8995/10012
+test slt ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+    Checking lekha v0.0.0 (/tmp/w)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.50s
+   Compiling lekha v0.0.0 (/tmp/w)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.11s
+     Running unittests src/lib.rs (target/debug/deps/lekha-64235b9370dff239)
+     Running unittests src/main.rs (target/debug/deps/lekha-7c6faf1f186577e0)
+     Running tests/slt.rs (target/debug/deps/slt-5c1aafed4a72709e)
+   Doc-tests lekha
+2026-11-28T02:20:28Z checks passed, score 8995 -> 8995 of 10012
+2026-11-28T02:20:30Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com -c credential.helper= -c credential.helper=!gh auth git-credential push -u origin ticket-20
+exit code 0
+branch 'ticket-20' set up to track 'origin/ticket-20'.
+remote: 
+remote: Create a pull request for 'ticket-20' on GitHub by visiting:        
+remote:      https://github.com/bettersandeep/lekha/pull/new/ticket-20        
+remote: 
+To https://github.com/bettersandeep/lekha.git
+ * [new branch]      ticket-20 -> ticket-20
+2026-11-28T02:20:33Z $ gh pr create -R bettersandeep/lekha --head ticket-20 --base main --title Comparison and boolean operators in SELECT without FROM --body-file /Users/sandeepsingh/.local/state/yantra/runs/ticket-20-20261128T021639Z/pr-body.md
+exit code 0
+https://github.com/bettersandeep/lekha/pull/23
+2026-11-28T02:20:33Z $ git -c core.hooksPath=/dev/null -c user.name=Sandeep Singh -c user.email=14184381+bettersandeep@users.noreply.github.com rev-parse HEAD
+exit code 0
+39a52d64a2fd2c548a4fd9865e8061372ccecdb8
+2026-11-28T02:20:34Z wait for the review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8: review: none, CI: pending
+2026-11-28T02:21:05Z wait for the review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8: review: none, CI: success
+2026-11-28T02:21:36Z wait for the review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8: review: none, CI: success
+2026-11-28T02:22:08Z wait for the review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8: review: none, CI: success
+2026-11-28T02:22:39Z review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8: clean, findings: 0, CI: success
+2026-11-28T02:22:39Z end state: ready-for-human. CI is green and the Qodo review of 39a52d64a2fd2c548a4fd9865e8061372ccecdb8 is clean.
