@@ -1,0 +1,14 @@
+#10 NULL, COALESCE and NULLIF in SELECT without FROM
+The test file has 1,282 failing records with the `NULL` literal, 614 with `NULLIF` and 524 with `COALESCE`. This ticket adds the three.
+
+Acceptance criteria:
+- `NULL` is an expression. Unary and binary arithmetic with a NULL operand gives NULL.
+- `COALESCE(a, b, ...)` takes two or more arguments and returns the first one that is not NULL, or NULL when all are NULL.
+- `NULLIF(a, b)` takes exactly two arguments. It returns NULL when `a` equals `b`, and `a` in each other case. A NULL argument never equals a value.
+- Function names are case-insensitive, and white space is allowed before the `(`.
+- A wrong number of arguments is an error. An error inside an argument is an error for the whole statement, also for an argument that SQLite does not evaluate.
+- Each other function name is still an error.
+- `tests/slt/baseline.txt` has the new exact pass count. The number goes up.
+- No record that passed before fails now.
+
+Scope: `src/`, `tests/slt/baseline.txt`, `README.md`.

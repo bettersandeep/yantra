@@ -1,0 +1,13 @@
+#11 COUNT, MIN, MAX and SUM in SELECT without FROM
+Aggregate functions are in 4,168 of the failing records. A SELECT without FROM has one row, so each aggregate sees one row. This ticket adds the four aggregates that return an integer or NULL.
+
+Acceptance criteria:
+- `COUNT(*)` returns 1. `COUNT([ALL | DISTINCT] expr)` returns 1 when `expr` is not NULL, and 0 when it is NULL.
+- `MIN`, `MAX` and `SUM`, each with one argument and an optional `ALL` or `DISTINCT`, return the value of the argument. A NULL argument gives NULL.
+- An aggregate can be a part of a larger expression, and one select list can hold aggregates and plain expressions.
+- An aggregate inside the argument of an aggregate is an error, as in SQLite.
+- `MIN` and `MAX` with two or more arguments are errors for now. `AVG`, `TOTAL` and `GROUP_CONCAT` are errors for now.
+- `tests/slt/baseline.txt` has the new exact pass count. The number goes up.
+- No record that passed before fails now.
+
+Scope: `src/`, `tests/slt/baseline.txt`, `README.md`.

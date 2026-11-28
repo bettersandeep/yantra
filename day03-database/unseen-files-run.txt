@@ -1,0 +1,15 @@
+Run of two sqllogictest files that the coding agent never saw, against the engine at commit 0ac38bc (after pull request 14).
+The files were added to a temp copy of the repo inside a container. They are not in the repo.
+Source: https://github.com/gregrahn/sqllogictest at commit c93ac416f05635ff5cc490009add936d9753d01d
+sha256 1e0f2e3cfe0dd1458820bc815b0a551227d48288370399d7d5006143186149ed  test/random/expr/slt_good_1.test
+sha256 85b74b1c18c73b0d6387c187ddad38819fa49c65fdd64862f3494c64cbff8402  test/random/expr/slt_good_2.test
+
+slt: random/expr/slt_good_0.test 7981/10012   (the file in the repo, which the agent sees)
+slt: random/expr/slt_good_1.test 8835/10012   (unseen)
+slt: random/expr/slt_good_2.test 8348/10012   (unseen)
+
+Each failing record, by what the engine returned:
+random/expr/slt_good_0.test failures: 2031  error at CAST 1217, CASE 740, AVG 47, comparison character 15, INSERT 9, CREATE 3
+random/expr/slt_good_1.test failures: 1177  error at CAST 1116, CASE 25, AVG 24, INSERT 9, CREATE 3
+random/expr/slt_good_2.test failures: 1664  error at CAST 1027, CASE 565, AVG 49, comparison character 11, INSERT 9, CREATE 3
+Failing records where the engine returned a value and not an error: 0
