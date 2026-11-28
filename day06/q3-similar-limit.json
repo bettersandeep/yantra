@@ -1,0 +1,52 @@
+[
+ {
+  "number": 23,
+  "title": "Comparison and boolean operators in SELECT without FROM",
+  "url": "https://github.com/bettersandeep/lekha/pull/23"
+ },
+ {
+  "number": 12,
+  "title": "Add NULL, COALESCE and NULLIF",
+  "url": "https://github.com/bettersandeep/lekha/pull/12"
+ },
+ {
+  "number": 4,
+  "title": "Evaluate integer arithmetic in SELECT without FROM",
+  "url": "https://github.com/bettersandeep/lekha/pull/4"
+ },
+ {
+  "number": 14,
+  "title": "Add COUNT, MIN, MAX and SUM",
+  "url": "https://github.com/bettersandeep/lekha/pull/14"
+ },
+ {
+  "number": 30,
+  "title": "CASE expressions in SELECT without FROM",
+  "url": "https://github.com/bettersandeep/lekha/pull/30"
+ },
+ {
+  "number": 19,
+  "title": "CAST to INTEGER in SELECT without FROM",
+  "url": "https://github.com/bettersandeep/lekha/pull/19"
+ },
+ {
+  "number": 26,
+  "title": "Runner: name the branch after the ticket title and number",
+  "url": "https://github.com/bettersandeep/lekha/pull/26"
+ },
+ {
+  "number": 3,
+  "title": "Add the sqllogictest harness and the first test file",
+  "url": "https://github.com/bettersandeep/lekha/pull/3"
+ },
+ {
+  "number": 7,
+  "title": "Add AGENTS.md and the checks behind its rules",
+  "url": "https://github.com/bettersandeep/lekha/pull/7"
+ },
+ {
+  "number": 22,
+  "title": "Runner: state outside the cache folder, and a crash still hands off",
+  "url": "https://github.com/bettersandeep/lekha/pull/22"
+ }
+]
