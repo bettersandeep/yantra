@@ -1,0 +1,372 @@
+{
+  "count": 28,
+  "active": 13,
+  "inactive": 15,
+  "rules": [
+    {
+      "name": "Bug fixes must include a regression test that fails before the fix",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/yantra/",
+        "/bettersandeep/lekha/"
+      ],
+      "content": "For each bug or review-finding fix, inspect the added test case and confirm that it fails against the pre-fix implementation and passes against the corrected implementation.",
+      "createdAt": "2026-11-27T22:16:10.436615Z"
+    },
+    {
+      "name": "Reject unsupported SQL rather than returning guessed results",
+      "state": "active",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect unsupported-input and fallback branches throughout the repository. They must return errors rather than fabricated successful query results or plausible values not computed according to SQLite semantics.",
+      "createdAt": "2026-11-28T00:11:01.287851Z"
+    },
+    {
+      "name": "Keep the engine free of dependencies",
+      "state": "active",
+      "severity": "error",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Check Cargo.toml and Cargo.lock for added dependencies; the lockfile must contain only the repository's own package.",
+      "createdAt": "2026-11-28T00:11:07.980784Z"
+    },
+    {
+      "name": "Do not use unsafe Rust in the engine",
+      "state": "active",
+      "severity": "error",
+      "category": "Security",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect src/** for unsafe blocks, functions, or implementations and retain the crate-level unsafe-code prohibition.",
+      "createdAt": "2026-11-28T00:11:13.054949Z"
+    },
+    {
+      "name": "Do not delegate engine execution to external programs or libraries",
+      "state": "active",
+      "severity": "warning",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect src/** for subprocess invocation, FFI, dynamic loading, or other delegation to external programs or libraries to implement engine behavior. Standard-library use is not the prohibited external delegation.",
+      "createdAt": "2026-11-28T00:11:15.549817Z"
+    },
+    {
+      "name": "Keep engine changes separate from changes to score-measurement code and fixtures",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect the change set: changes to src/, Cargo.toml, or Cargo.lock must not also modify test fixtures, checksums, tests/slt/, tests/slt.rs, ci/, .github/, or yantra/. tests/slt/baseline.txt is exempt. Harness corrections belong in separate changes.",
+      "createdAt": "2026-11-28T00:11:20.210657Z"
+    },
+    {
+      "name": "Record exact measured pass counts in the baseline",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare each tests/slt/baseline.txt count to the corresponding slt test output. Require exact equality, not a lower-bound threshold.",
+      "createdAt": "2026-11-28T00:11:25.754440Z"
+    },
+    {
+      "name": "Explain baseline score decreases in the pull-request description",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare baseline counts before and after the change. For any decrease, require an explanation in the pull-request description.",
+      "createdAt": "2026-11-28T00:11:31.013103Z"
+    },
+    {
+      "name": "Include a reproducing regression test with review fixes",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "For a fix to a review finding, inspect the accompanying test and verify it fails on the pre-fix implementation and passes with the fix.",
+      "createdAt": "2026-11-28T00:11:36.341148Z"
+    },
+    {
+      "name": "Keep the engine free of dependencies [source aa8d9ea0]",
+      "state": "inactive",
+      "severity": "error",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect Cargo.toml and Cargo.lock; do not add dependencies beyond the repository's own package.",
+      "createdAt": "2026-11-28T00:12:10.193039Z"
+    },
+    {
+      "name": "Return errors for unsupported input rather than guessed values",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect unsupported SQL handling and fallback branches. Unsupported inputs must produce errors, not fabricated successful query results.",
+      "createdAt": "2026-11-28T00:12:15.580943Z"
+    },
+    {
+      "name": "Implement supported SQL with SQLite-compatible results",
+      "state": "active",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "For implemented SQL, compare returned values with the SQLite expected results in the public sqllogictest suite under tests/slt/; inspect arithmetic and result handling for semantic mismatches. Unsupported inputs may return errors under the separate unsupported-input rule.",
+      "createdAt": "2026-11-28T00:12:28.177155Z"
+    },
+    {
+      "name": "Update the baseline to exact measured pass counts when scores improve",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare tests/slt/baseline.txt against slt test output after the change. Each improved pass count must be recorded exactly rather than retaining the previous lower count.",
+      "createdAt": "2026-11-28T00:12:33.694795Z"
+    },
+    {
+      "name": "Do not reduce baseline pass counts",
+      "state": "active",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/yantra-sql/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare tests/slt/baseline.txt before and after the change; flag any per-file pass-count decrease. README states a strict nondecrease requirement; AGENTS.md separately describes explanations for decreases.",
+      "createdAt": "2026-11-28T00:12:40.344733Z"
+    },
+    {
+      "name": "Return errors for unsupported SQL instead of plausible default values",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect unsupported-input paths in src/**. They must return an error rather than fabricate a result or silently accept unsupported syntax.",
+      "createdAt": "2026-11-28T02:41:10.444545Z"
+    },
+    {
+      "name": "Keep the engine crate free of dependencies",
+      "state": "inactive",
+      "severity": "error",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect Cargo.toml and Cargo.lock for added dependencies. The lockfile must contain only lekha's package.",
+      "createdAt": "2026-11-28T02:41:17.792339Z"
+    },
+    {
+      "name": "Do not use unsafe Rust in the engine [source 13638803]",
+      "state": "inactive",
+      "severity": "error",
+      "category": "Security",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect src/** for unsafe blocks, unsafe declarations, or weakening of the crate-level unsafe-code prohibition.",
+      "createdAt": "2026-11-28T02:41:24.160009Z"
+    },
+    {
+      "name": "Do not delegate engine execution to external programs or libraries [source 13638803]",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect src/** for subprocess execution, foreign-library calls, or other delegation of engine work to an external program or library. Rust standard-library use is not the prohibited external engine delegation.",
+      "createdAt": "2026-11-28T02:41:31.363412Z"
+    },
+    {
+      "name": "Keep engine changes separate from changes to their measurement machinery",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect the PR diff: changes to src/, Cargo.toml or Cargo.lock must not be combined with changes to tests/slt/ (except baseline.txt), tests/slt.rs, ci/, .github/, or yantra/. Harness corrections belong in separate changes.",
+      "createdAt": "2026-11-28T02:41:37.900610Z"
+    },
+    {
+      "name": "Store exact measured sqllogictest pass counts in the baseline",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare every tests/slt/baseline.txt count with the corresponding slt test output. Counts must equal measurements, not merely be lower bounds.",
+      "createdAt": "2026-11-28T02:41:48.905388Z"
+    },
+    {
+      "name": "Explain baseline decreases in the pull request description",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare tests/slt/baseline.txt against the base revision. If the score decreases, verify that the PR description explains why.",
+      "createdAt": "2026-11-28T02:41:54.433180Z"
+    },
+    {
+      "name": "Cite evidence for implemented SQLite behavior",
+      "state": "active",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "For each implementation of a SQLite rule in src/** or tests/slt.rs, look for a named SQLite document or demonstrating test record in a code comment or PR description. Reject behavior justified only from memory.",
+      "createdAt": "2026-11-28T02:42:01.416363Z"
+    },
+    {
+      "name": "Run authoritative checks from code the checked change cannot control",
+      "state": "active",
+      "severity": "error",
+      "category": "Security",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Trace the runtime origin of authoritative check code in CI, the runner, and new checks. It must come from the base branch or outside the candidate tree, with paths and permissions preventing the candidate from replacing or redirecting it. Candidate-owned checks may only be supplemental signals.",
+      "createdAt": "2026-11-28T02:42:07.048395Z"
+    },
+    {
+      "name": "Cover review-finding fixes with a test that fails before the fix",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/AGENTS.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "For a fix addressing a review finding, inspect its test and run it against the pre-fix revision. The test must fail there and pass with the correction.",
+      "createdAt": "2026-11-28T02:42:09.899147Z"
+    },
+    {
+      "name": "Keep the engine crate free of dependencies [source 799d3fe3]",
+      "state": "inactive",
+      "severity": "error",
+      "category": "Architecture",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect Cargo.toml and Cargo.lock; the engine must not introduce external dependencies.",
+      "createdAt": "2026-11-28T02:42:43.640598Z"
+    },
+    {
+      "name": "Return errors for unsupported SQL instead of guessed values",
+      "state": "active",
+      "severity": "warning",
+      "category": "Correctness",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Inspect unsupported-input paths in src/**. Unsupported constructs must produce errors, not fabricated SQL results.",
+      "createdAt": "2026-11-28T02:42:49.571249Z"
+    },
+    {
+      "name": "Update baseline counts to the exact measured pass counts",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Run the sqllogictest harness and compare each printed <passed> count with tests/slt/baseline.txt. A change improving results must update the corresponding baseline count; neither understated nor overstated counts comply.",
+      "createdAt": "2026-11-28T02:42:52.389333Z"
+    },
+    {
+      "name": "Do not lower sqllogictest baseline counts",
+      "state": "inactive",
+      "severity": "warning",
+      "category": "Testability",
+      "sourceType": "Repository File",
+      "sourceUri": "bettersandeep/lekha/README.md",
+      "scopes": [
+        "/bettersandeep/lekha/"
+      ],
+      "content": "Compare tests/slt/baseline.txt with the base revision and flag lowered counts. The README states a non-decrease rule; AGENTS.md separately requires an explanation for a PR that lowers a count.",
+      "createdAt": "2026-11-28T02:42:58.861261Z"
+    }
+  ]
+}
